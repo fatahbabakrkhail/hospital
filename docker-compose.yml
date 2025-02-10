@@ -13,13 +13,20 @@ services:
       - postgres_data:/var/lib/postgresql/data
     networks:
       - hospital_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s     
+      timeout: 3s      
+      retries: 3       
+      start_period: 10s 
 
   hospital:
     build: .
     container_name: hospital
     restart: always
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy  
     env_file:
       - .env
     ports:
@@ -27,11 +34,16 @@ services:
     volumes:
       - .:/app
     command: >
-      sh -c "sleep 10 &&
-             python manage.py migrate &&
+      sh -c "python manage.py migrate &&
              python manage.py runserver 0.0.0.0:2025"
     networks:
       - hospital_network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:2025/ || exit 1"]
+      interval: 5s    
+      timeout: 3s     
+      retries: 2      
+      start_period: 15s  
 
 volumes:
   postgres_data:
