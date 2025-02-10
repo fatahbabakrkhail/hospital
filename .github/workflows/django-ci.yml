@@ -1,0 +1,48 @@
+name: Django CI
+
+on:
+  push:
+    branches: [ dev ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:latest
+        env:
+          POSTGRES_DB: django_db
+          POSTGRES_USER: django_user
+          POSTGRES_PASSWORD: django_password
+        ports:
+          - 5432:5432
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: |
+          python -m venv venv
+          source venv/bin/activate
+          pip install -r requirements.txt
+
+      - name: Run migrations
+        env:
+          DATABASE_URL: postgres://django_user:django_password@localhost:5432/django_db
+        run: |
+          python manage.py migrate
+
+      - name: Run tests
+        env:
+          DATABASE_URL: postgres://django_user:django_password@localhost:5432/django_db
+        run: |
+          python manage.py test
