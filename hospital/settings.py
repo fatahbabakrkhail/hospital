@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 from pathlib import Path
 import dj_database_url
 import os
+from datetime import timedelta
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -25,23 +26,39 @@ SECRET_KEY = 'django-insecure-_c5#%w-59otklr!e=yj&a3w9+eg(z0=r%ha&jz2qo4j9pnhb@j
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
 
+# OR (for production, specify allowed frontend domains)
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",  # React/Vue/Next.js frontend
+    "https://yourdomain.com"  # Your production frontend
+]
+
+# Allow frontend to send credentials (Cookies, Auth headers)
+CORS_ALLOW_CREDENTIALS = True  
 
 # Application definition
 
 INSTALLED_APPS = [
+    # django core apps
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    # Third-party apps
+    'rest_framework',                 # Django REST Framework
+    'rest_framework_simplejwt',  # JWT authentication for DRF
+    'drf_spectacular',                # OpenAPI/Swagger
+    'django_filters',                 # Filtering support
+    'celery',                          # Celery background tasks 
+    'corsheaders',  # Enable CORS support
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',  # Add this line
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -118,3 +135,41 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+
+REST_FRAMEWORK = {
+    # 📌 Enables automatic API documentation using drf-spectacular (Swagger & ReDoc)
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',  
+
+    # 📌 Enables filtering support (e.g., /api/users/?name=John)
+    'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend'],  
+
+    # 📌 Enables JWT authentication for secure API access
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication', 
+    ),
+
+    # 📌 Configures API pagination (limit-offset style)
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
+    
+    # 📌 Sets the default number of results per page
+    'PAGE_SIZE': 10,  
+}
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'Hospital API',
+    'DESCRIPTION': 'API documentation for the Hospital Management System',
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
+}
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(days=1),  # Token valid for 1 day
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),  # Refresh token valid for 7 days
+    'ROTATE_REFRESH_TOKENS': True,  # Refresh token rotates
+    'BLACKLIST_AFTER_ROTATION': True,
+    'ALGORITHM': 'HS256',
+    'SIGNING_KEY': os.getenv('JWT_SECRET_KEY'),
+    'AUTH_HEADER_TYPES': ('Bearer',),
+}
