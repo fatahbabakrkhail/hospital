@@ -1,9 +1,9 @@
 version: '3.9'
 
 services:
-  db:
+  postgres:
     image: postgres:latest
-    container_name: postgres_db
+    container_name: postgres
     restart: always
     env_file:
       - .env
@@ -11,19 +11,32 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    networks:
+      - hospital_network
 
-  web:
+  hospital:
     build: .
-    container_name: django_app
+    container_name: hospital
     restart: always
     depends_on:
-      - db
+      - postgres
     env_file:
       - .env
     ports:
       - "2025:2025"
     volumes:
       - .:/app
+    command: >
+      sh -c "sleep 10 &&
+             python manage.py migrate &&
+             python manage.py runserver 0.0.0.0:2025"
+    networks:
+      - hospital_network
 
 volumes:
   postgres_data:
+    name: postgres_data  
+
+networks:
+  hospital_network:
+    name: hospital_network  
