@@ -168,8 +168,8 @@ SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(days=1),  # Token valid for 1 day
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7),  # Refresh token valid for 7 days
     'ROTATE_REFRESH_TOKENS': True,  # Refresh token rotates
-    'BLACKLIST_AFTER_ROTATION': True,
-    'ALGORITHM': 'HS256',
-    'SIGNING_KEY': os.getenv('JWT_SECRET_KEY'),
-    'AUTH_HEADER_TYPES': ('Bearer',),
+    'BLACKLIST_AFTER_ROTATION': True,  # Blacklist old refresh tokens after rotation
+    'ALGORITHM': 'HS256',  # Algorithm used for signing tokens
+    'SIGNING_KEY': os.getenv('JWT_SECRET_KEY'),  # Secret key for signing JWTs
+    'AUTH_HEADER_TYPES': ('Bearer',),  # Expected auth header format
 }
