@@ -37,13 +37,7 @@ services:
       sh -c "python manage.py migrate &&
              python manage.py runserver 0.0.0.0:2025"
     networks:
-      - hospital_network
-    healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:2025/ || exit 1"]
-      interval: 5s    
-      timeout: 3s     
-      retries: 2      
-      start_period: 15s  
+      - hospital_network 
 
 volumes:
   postgres_data:
