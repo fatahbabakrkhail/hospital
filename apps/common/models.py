@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth import get_user_model
 from hospital.middleware import get_current_user
 from .managers import BaseManager
+from django.utils import timezone
 
 User = get_user_model()
 
@@ -45,8 +46,30 @@ class BaseModel(models.Model):
 
     def save(self, *args, **kwargs):
         """Automatically set created_by and updated_by fields."""
-        user = get_current_user()
-        if not self.pk and not self.created_by:
+        user = get_current_user()  # ✅ Get the current user dynamically
+
+        if not self.pk and not self.created_by and user:
             self.created_by = user
-        self.updated_by = user
+        if user:  # ✅ Only update `updated_by` if a user exists
+            self.updated_by = user
+
         super().save(*args, **kwargs)
+
+    def soft_delete(self):
+        """Perform a soft delete (works for API, Admin, and Scripts)."""
+        if self.deleted_at:  # ✅ Prevent redundant soft deletes
+            return
+        
+        user = get_current_user()  # ✅ Get the current user dynamically
+        self.deleted_at = timezone.now()
+        self.deleted_by = user
+        self.save(update_fields=["deleted_at", "deleted_by"])  # ✅ Only update these fields
+
+    def restore(self):
+        """Restore a soft-deleted record."""
+        if not self.deleted_at:  # ✅ Prevent redundant restores
+            return
+        
+        self.deleted_at = None
+        self.deleted_by = None
+        self.save(update_fields=["deleted_at", "deleted_by"])  # ✅ Only update these fields
