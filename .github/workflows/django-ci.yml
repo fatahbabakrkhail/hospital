@@ -3,7 +3,7 @@ name: Django CI
 on:
   push:
     branches:
-      - "*"  # ✅ Runs on ALL branches
+      - "**"  # ✅ Runs on ALL branches
   pull_request:
     branches:
       - main  # ✅ Runs on PRs to `main`
